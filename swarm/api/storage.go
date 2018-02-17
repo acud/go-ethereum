@@ -16,7 +16,11 @@
 
 package api
 
-import "path"
+import (
+	"path"
+
+	"github.com/ethereum/go-ethereum/swarm/api/http/uri"
+)
 
 type Response struct {
 	MimeType string
@@ -58,7 +62,7 @@ func (self *Storage) Put(content, contentType string) (string, error) {
 //
 // DEPRECATED: Use the HTTP API instead
 func (self *Storage) Get(bzzpath string) (*Response, error) {
-	uri, err := Parse(path.Join("bzz:/", bzzpath))
+	uri, err := uri.Parse(path.Join("bzz:/", bzzpath))
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +92,7 @@ func (self *Storage) Get(bzzpath string) (*Response, error) {
 //
 // DEPRECATED: Use the HTTP API instead
 func (self *Storage) Modify(rootHash, path, contentHash, contentType string) (newRootHash string, err error) {
-	uri, err := Parse("bzz:/" + rootHash)
+	uri, err := uri.Parse("bzz:/" + rootHash)
 	if err != nil {
 		return "", err
 	}

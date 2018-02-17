@@ -16,8 +16,14 @@
 
 package controllers
 
+import (
+	"net/http"
+
+	"github.com/ethereum/go-ethereum/swarm/api/http/request"
+)
+
 type controller interface {
-	//Handle(w http.ResponseWriter, r *Request) error
+	Handle(w http.ResponseWriter, r *request.Request) error
 	Name() string
 	Method() string
 	Resource() string

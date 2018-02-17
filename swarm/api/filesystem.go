@@ -28,6 +28,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/swarm/api/http/uri"
 	"github.com/ethereum/go-ethereum/swarm/storage"
 )
 
@@ -184,7 +185,7 @@ func (self *FileSystem) Download(bzzpath, localpath string) error {
 	}
 
 	//resolving host and port
-	uri, err := Parse(path.Join("bzz:/", bzzpath))
+	uri, err := uri.Parse(path.Join("bzz:/", bzzpath))
 	if err != nil {
 		return err
 	}

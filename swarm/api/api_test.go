@@ -26,6 +26,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/swarm/api/http/uri"
 	"github.com/ethereum/go-ethereum/swarm/storage"
 )
 
@@ -214,7 +215,7 @@ func TestAPIResolve(t *testing.T) {
 	for _, x := range tests {
 		t.Run(x.desc, func(t *testing.T) {
 			api := &Api{dns: x.dns}
-			uri := &URI{Addr: x.addr, Scheme: "bzz"}
+			uri := &uri.URI{Addr: x.addr, Scheme: "bzz"}
 			if x.immutable {
 				uri.Scheme = "bzz-immutable"
 			}

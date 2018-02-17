@@ -21,10 +21,11 @@ import (
 	"path"
 
 	"github.com/ethereum/go-ethereum/swarm/api"
+	"github.com/ethereum/go-ethereum/swarm/api/http/uri"
 )
 
 type htmlListData struct {
-	URI  *api.URI
+	URI  *uri.URI
 	List *api.ManifestList
 }
 

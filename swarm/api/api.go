@@ -31,6 +31,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/swarm/api/http/uri"
 	"github.com/ethereum/go-ethereum/swarm/storage"
 )
 
@@ -78,7 +79,7 @@ func (self *Api) Store(data io.Reader, size int64, wg *sync.WaitGroup) (key stor
 type ErrResolve error
 
 // DNS Resolver
-func (self *Api) Resolve(uri *URI) (storage.Key, error) {
+func (self *Api) Resolve(uri *uri.URI) (storage.Key, error) {
 	log.Trace(fmt.Sprintf("Resolving : %v", uri.Addr))
 
 	// if the URI is immutable, check if the address is a hash
@@ -184,7 +185,7 @@ func (self *Api) Modify(key storage.Key, path, contentHash, contentType string) 
 
 func (self *Api) AddFile(mhash, path, fname string, content []byte, nameresolver bool) (storage.Key, string, error) {
 
-	uri, err := Parse("bzz:/" + mhash)
+	uri, err := uri.Parse("bzz:/" + mhash)
 	if err != nil {
 		return nil, "", err
 	}
@@ -228,7 +229,7 @@ func (self *Api) AddFile(mhash, path, fname string, content []byte, nameresolver
 
 func (self *Api) RemoveFile(mhash, path, fname string, nameresolver bool) (string, error) {
 
-	uri, err := Parse("bzz:/" + mhash)
+	uri, err := uri.Parse("bzz:/" + mhash)
 	if err != nil {
 		return "", err
 	}
@@ -288,7 +289,7 @@ func (self *Api) AppendFile(mhash, path, fname string, existingSize int64, conte
 	//newReader := bytes.NewReader(content)
 	//combinedReader := io.MultiReader(oldReader, newReader)
 
-	uri, err := Parse("bzz:/" + mhash)
+	uri, err := uri.Parse("bzz:/" + mhash)
 	if err != nil {
 		return nil, "", err
 	}
@@ -336,7 +337,7 @@ func (self *Api) AppendFile(mhash, path, fname string, existingSize int64, conte
 }
 
 func (self *Api) BuildDirectoryTree(mhash string, nameresolver bool) (key storage.Key, manifestEntryMap map[string]*manifestTrieEntry, err error) {
-	uri, err := Parse("bzz:/" + mhash)
+	uri, err := uri.Parse("bzz:/" + mhash)
 	if err != nil {
 		return nil, nil, err
 	}

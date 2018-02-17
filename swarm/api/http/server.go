@@ -38,6 +38,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/swarm/api"
+	"github.com/ethereum/go-ethereum/swarm/api/http/uri"
 	"github.com/ethereum/go-ethereum/swarm/storage"
 	"github.com/rs/cors"
 )
@@ -83,7 +84,7 @@ type Server struct {
 type Request struct {
 	http.Request
 
-	uri *api.URI
+	uri *uri.URI
 }
 
 // HandlePostRaw handles a POST request to a raw bzz-raw:/ URI, stores the request
@@ -462,7 +463,7 @@ func (s *Server) HandleGetList(w http.ResponseWriter, r *Request) {
 	if strings.Contains(r.Header.Get("Accept"), "text/html") {
 		w.Header().Set("Content-Type", "text/html")
 		err := htmlListTemplate.Execute(w, &htmlListData{
-			URI: &api.URI{
+			URI: &uri.URI{
 				Scheme: "bzz",
 				Addr:   r.uri.Addr,
 				Path:   r.uri.Path,
@@ -591,7 +592,7 @@ func (s *Server) HandleGetFile(w http.ResponseWriter, r *Request) {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.logDebug("HTTP %s request URL: '%s', Host: '%s', Path: '%s', Referer: '%s', Accept: '%s'", r.Method, r.RequestURI, r.URL.Host, r.URL.Path, r.Referer(), r.Header.Get("Accept"))
 
-	uri, err := api.Parse(strings.TrimLeft(r.URL.Path, "/"))
+	uri, err := uri.Parse(strings.TrimLeft(r.URL.Path, "/"))
 	req := &Request{Request: *r, uri: uri}
 	if err != nil {
 		s.logError("Invalid URI %q: %s", r.URL.Path, err)

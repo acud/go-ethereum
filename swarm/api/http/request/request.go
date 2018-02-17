@@ -11,5 +11,5 @@ import (
 type Request struct {
 	http.Request
 
-	uri *api.URI
+	uri *uri.URI
 }

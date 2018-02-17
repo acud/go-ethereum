@@ -15,11 +15,11 @@
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
 package http
-import  ctrl "github.com/ethereum/go-ethereum/swarm/api/http/controllers"
 
+import ctrl "github.com/ethereum/go-ethereum/swarm/api/http/controllers"
 
 type Route struct {
-	controller Controller
+	controller *ctrl.Controller
 	resource   string
 }
 
@@ -27,6 +27,6 @@ type Router struct {
 	//
 }
 
-var routes = []Route {
-	&Route{ctrl.DiskUsageController }
-}
+// var routes = []Route{
+// 	&Route{ctrl.DiskUsageController},
+// }
