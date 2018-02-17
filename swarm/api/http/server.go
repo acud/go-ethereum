@@ -629,6 +629,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.HandleDelete(w, req)
 
 	case "GET":
+
+		//TODO PARSE THE CUSTOM ENDPOINT STUFF AND HANDLE THE REPONSE CORRECTLY
+		/*
+			context is propagated from main to swarm.go, then swarm.go creates this https server
+			a possible strategy would be to pass the context down to the server
+		*/
+
 		if uri.Raw() || uri.Hash() || uri.DeprecatedRaw() {
 			s.HandleGet(w, req)
 			return
