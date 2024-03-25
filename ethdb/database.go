@@ -190,3 +190,7 @@ type Database interface {
 	Snapshotter
 	io.Closer
 }
+
+type DocStoreWriter interface {
+	Write(collection string, data []byte) ([]byte, error)
+}

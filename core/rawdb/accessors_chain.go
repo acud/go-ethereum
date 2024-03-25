@@ -396,6 +396,29 @@ func WriteHeader(db ethdb.KeyValueWriter, header *types.Header) {
 		log.Crit("Failed to store header", "err", err)
 	}
 }
+func WriteHeaderDoc(db ethdb.DocStoreWriter, header *types.Header) {
+	var (
+		hash   = header.Hash()
+		number = header.Number.Uint64()
+	)
+
+	// TODO: Add the index in mongo somehow
+	if err := db.Write("header", header); err != nil {
+		log.Crit("Failed to store header", "err", err)
+	}
+	// Write the hash -> number mapping
+	//WriteHeaderNumber(db, hash, number)
+
+	//Write the encoded header
+	//data, err := rlp.EncodeToBytes(header)
+	//if err != nil {
+	//log.Crit("Failed to RLP encode header", "err", err)
+	//}
+	//key := headerKey(number, hash)
+	//if err := db.Put(key, data); err != nil {
+	//log.Crit("Failed to store header", "err", err)
+	//}
+}
 
 // DeleteHeader removes all block header data associated with a hash.
 func DeleteHeader(db ethdb.KeyValueWriter, hash common.Hash, number uint64) {
@@ -500,6 +523,21 @@ func WriteBody(db ethdb.KeyValueWriter, hash common.Hash, number uint64, body *t
 		log.Crit("Failed to RLP encode body", "err", err)
 	}
 	WriteBodyRLP(db, hash, number, data)
+}
+
+type BlockBody struct {
+	types.Body
+	Hash   common.Hash
+	Number uint64
+}
+
+func WriteBodyDoc(db ethdb.DocStoreWriter, hash common.Hash, number uint64, body *types.Body) {
+	v := &BlockBody{
+		body,
+		Hash:   hash,
+		Number: number,
+	}
+	return db.Write("body", v)
 }
 
 // DeleteBody removes all block body data associated with a hash.
@@ -760,6 +798,11 @@ func ReadBlock(db ethdb.Reader, hash common.Hash, number uint64) *types.Block {
 func WriteBlock(db ethdb.KeyValueWriter, block *types.Block) {
 	WriteBody(db, block.Hash(), block.NumberU64(), block.Body())
 	WriteHeader(db, block.Header())
+}
+
+func WriteBlockDoc(db ethdb.DocStoreWriter, block *types.Block) {
+	WriteBodyDoc(db, block.Hash(), block.NumberU64(), block.Body())
+	WriteHeaderDoc(db, block.Header())
 }
 
 // WriteAncientBlocks writes entire block data into ancient store and returns the total written size.
