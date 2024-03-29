@@ -291,6 +291,7 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, genesis *Genesis
 		chainConfig:   chainConfig,
 		cacheConfig:   cacheConfig,
 		db:            db,
+		mongo:         mongo.New(),
 		triedb:        triedb,
 		triegc:        prque.New[int64, common.Hash](nil),
 		quit:          make(chan struct{}),
@@ -1377,6 +1378,7 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 			}
 			// Write all the data out into the database
 			rawdb.WriteBody(batch, block.Hash(), block.NumberU64(), block.Body())
+			rawdb.WriteBodyDoc(bc.mongo, block.Hash(), block.NumberU64(), block.Body())
 			rawdb.WriteReceipts(batch, block.Hash(), block.NumberU64(), receiptChain[i])
 
 			// Write everything belongs to the blocks into the database. So that

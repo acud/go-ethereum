@@ -2,7 +2,7 @@ package mongo
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -34,44 +34,44 @@ func New() *Db {
 	return &Db{client, ethdb}
 }
 
-func (db *Db) Insert(doc interface{}) ([]byte, error) {
-	coll := db.client.Database(db.db).Collection("myCollection")
-	res, err := coll.InsertOne()
-	v := res.(primitive.ObjectID)
-	var vv = [12]byte
-	copy(vv, v)
-	return vv, nil
-}
+//func (db *Db) Insert(doc interface{}) ([]byte, error) {
+//coll := db.client.Database(db.db).Collection("myCollection")
+//res, err := coll.InsertOne()
+
+//v := res.(primitive.ObjectID)
+//var vv = [12]byte
+//copy(vv, v)
+//return vv, nil
+//}
 
 func (db *Db) Write(coll string, val interface{}) ([]byte, error) {
-	res, err := db.client.Database(db.db).Collection(coll).InsertOne(context.TODO(), val)
+	res, err := db.client.
+		Database(db.db).Collection(coll).
+		InsertOne(context.TODO(), val)
 	if err != nil {
 		return nil, err
 	}
-	//fmt.Printf("Document inserted with ID: %s\n", res.InsertedID)
-	v := res.(primitive.ObjectID)
-	var vv = [12]byte
-	copy(vv, v)
-	return vv, nil
+	fmt.Printf("Document inserted with ID: %s\n", res)
+	v := res.InsertedID.(primitive.ObjectID)
+	var vv [12]byte
+	copy(vv[:], v[:])
+	return vv[:], nil
 
 }
 
-func (db *Db) FindOne() error {
-	coll := db.client.Database("newtest").Collection("myCollection")
-	title := "wrdup"
+var ErrNoDoc = errors.New("NoDoc")
+
+func (db *Db) Read(collection string, queryObj interface{}) (interface{}, error) {
+	coll := db.client.Database(db.db).Collection(collection)
 	var result bson.M
-	err = coll.FindOne(context.TODO(), bson.D{{"title", title}}).Decode(&result)
+	err := coll.FindOne(context.TODO(), queryObj).Decode(&result)
 	if err == mongo.ErrNoDocuments {
-		fmt.Printf("No document was found with the title %s\n", title)
-		return
+		return nil, ErrNoDoc
 	}
 	if err != nil {
 		panic(err)
 	}
-	jsonData, err := json.MarshalIndent(result, "", "    ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("%s\n", jsonData)
+	fmt.Println(result)
+	return result, nil
 
 }

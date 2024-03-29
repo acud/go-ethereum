@@ -32,6 +32,8 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rlp"
+	"go.mongodb.org/mongo-driver/bson"
+	"golang.org/x/exp/slices"
 )
 
 // ReadCanonicalHash retrieves the hash assigned to a canonical block number.
@@ -397,23 +399,23 @@ func WriteHeader(db ethdb.KeyValueWriter, header *types.Header) {
 	}
 }
 func WriteHeaderDoc(db ethdb.DocStoreWriter, header *types.Header) {
-	var (
-		hash   = header.Hash()
-		number = header.Number.Uint64()
-	)
+	//var (
+	//hash   = header.Hash()
+	//number = header.Number.Uint64()
+	//)
+	data, err := rlp.EncodeToBytes(header)
+	if err != nil {
+		log.Crit("Failed to RLP encode header", "err", err)
+	}
 
 	// TODO: Add the index in mongo somehow
-	if err := db.Write("header", header); err != nil {
+	if _, err := db.Write("header", data); err != nil {
 		log.Crit("Failed to store header", "err", err)
 	}
 	// Write the hash -> number mapping
 	//WriteHeaderNumber(db, hash, number)
 
 	//Write the encoded header
-	//data, err := rlp.EncodeToBytes(header)
-	//if err != nil {
-	//log.Crit("Failed to RLP encode header", "err", err)
-	//}
 	//key := headerKey(number, hash)
 	//if err := db.Put(key, data); err != nil {
 	//log.Crit("Failed to store header", "err", err)
@@ -444,6 +446,46 @@ func isCanon(reader ethdb.AncientReaderOp, number uint64, hash common.Hash) bool
 		return false
 	}
 	return bytes.Equal(h, hash[:])
+}
+
+// ReadBodyRLPDoc retrieves the block body (transactions and uncles) in RLP encoding.
+func ReadBodyRLPDoc(db ethdb.DocStoreReader, hash common.Hash, number uint64) rlp.RawValue {
+	var data []byte
+	//  query the number and hash
+
+	filter := bson.D{
+		{"$and",
+			bson.A{
+				bson.D{{"Hash", bson.D{{"$eq", hash}}}},
+				bson.D{{"Number", bson.D{{"$eq", number}}}},
+			},
+		},
+	}
+	//query := bson.D{{"Hash": hash, "Number": number}}
+	/*
+		type BlockBody struct {
+			types.Body
+			Hash   common.Hash
+			Number uint64
+		}
+	*/
+	data, err := db.Read("body", filter)
+	if err != nil {
+		fmt.Println("doc read body returned err", err)
+	}
+
+	fmt.Println("doc read body returned data", data)
+	//db.ReadAncients(func(reader ethdb.AncientReaderOp) error {
+	//// Check if the data is in ancients
+	//if isCanon(reader, number, hash) {
+	//data, _ = reader.Ancient(ChainFreezerBodiesTable, number)
+	//return nil
+	//}
+	//// If not, try reading from leveldb
+	//data, _ = db.Get(blockBodyKey(number, hash))
+	//return nil
+	//})
+	return data
 }
 
 // ReadBodyRLP retrieves the block body (transactions and uncles) in RLP encoding.
@@ -533,11 +575,11 @@ type BlockBody struct {
 
 func WriteBodyDoc(db ethdb.DocStoreWriter, hash common.Hash, number uint64, body *types.Body) {
 	v := &BlockBody{
-		body,
+		Body:   *body,
 		Hash:   hash,
 		Number: number,
 	}
-	return db.Write("body", v)
+	db.Write("body", v)
 }
 
 // DeleteBody removes all block body data associated with a hash.
@@ -875,6 +917,7 @@ type badBlock struct {
 }
 
 // ReadBadBlock retrieves the bad block with the corresponding block hash.
+// COMMENT(acud): not necessary to convert this to support doc store
 func ReadBadBlock(db ethdb.Reader, hash common.Hash) *types.Block {
 	blob, err := db.Get(badBlockKey)
 	if err != nil {
@@ -894,6 +937,7 @@ func ReadBadBlock(db ethdb.Reader, hash common.Hash) *types.Block {
 
 // ReadAllBadBlocks retrieves all the bad blocks in the database.
 // All returned blocks are sorted in reverse order by number.
+// COMMENT(acud): not necessary to convert this to support doc store
 func ReadAllBadBlocks(db ethdb.Reader) []*types.Block {
 	blob, err := db.Get(badBlockKey)
 	if err != nil {
@@ -912,6 +956,7 @@ func ReadAllBadBlocks(db ethdb.Reader) []*types.Block {
 
 // WriteBadBlock serializes the bad block into the database. If the cumulated
 // bad blocks exceeds the limitation, the oldest will be dropped.
+// COMMENT(acud): probably! not necessary to convert this to support doc store
 func WriteBadBlock(db ethdb.KeyValueStore, block *types.Block) {
 	blob, err := db.Get(badBlockKey)
 	if err != nil {
@@ -950,6 +995,7 @@ func WriteBadBlock(db ethdb.KeyValueStore, block *types.Block) {
 }
 
 // DeleteBadBlocks deletes all the bad blocks from the database
+// COMMENT(acud): not necessary to convert this to support doc store
 func DeleteBadBlocks(db ethdb.KeyValueWriter) {
 	if err := db.Delete(badBlockKey); err != nil {
 		log.Crit("Failed to delete bad blocks", "err", err)

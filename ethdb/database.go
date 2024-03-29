@@ -192,5 +192,9 @@ type Database interface {
 }
 
 type DocStoreWriter interface {
-	Write(collection string, data []byte) ([]byte, error)
+	Write(collection string, data interface{}) ([]byte, error)
+}
+
+type DocStoreReader interface {
+	Read(collection string, filter interface{}) ([]byte, error)
 }

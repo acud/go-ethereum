@@ -32,6 +32,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/ethdb/mongo"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -59,6 +60,7 @@ const (
 type HeaderChain struct {
 	config        *params.ChainConfig
 	chainDb       ethdb.Database
+	mongo         *mongo.Db
 	genesisHeader *types.Header
 
 	currentHeader     atomic.Value // Current head of the header chain (may be above the block chain!)
@@ -85,6 +87,7 @@ func NewHeaderChain(chainDb ethdb.Database, config *params.ChainConfig, engine c
 	hc := &HeaderChain{
 		config:        config,
 		chainDb:       chainDb,
+		mongo:         mongo.New(),
 		headerCache:   lru.NewCache[common.Hash, *types.Header](headerCacheLimit),
 		tdCache:       lru.NewCache[common.Hash, *big.Int](tdCacheLimit),
 		numberCache:   lru.NewCache[common.Hash, uint64](numberCacheLimit),
