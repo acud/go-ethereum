@@ -1290,6 +1290,12 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 				}
 				size += writeSize
 				log.Info("Wrote genesis to ancients")
+				_, err = rawdb.WriteAncientBlocksDoc(bc.mongo, []*types.Block{bc.genesisBlock}, []types.Receipts{nil}, td)
+				if err != nil {
+					log.Error("Error writing genesis to mongodb", "err", err)
+					return 0, err
+				}
+
 			}
 		}
 		// Before writing the blocks to the ancients, we need to ensure that
@@ -1307,6 +1313,11 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 			return 0, err
 		}
 		size += writeSize
+		_, err = rawdb.WriteAncientBlocksDoc(bc.mongo, []*types.Block{bc.genesisBlock}, []types.Receipts{nil}, td)
+		if err != nil {
+			log.Error("Error importing chain data to mongodb", "err", err)
+			return 0, err
+		}
 
 		// Sync the ancient store explicitly to ensure all data has been flushed to disk.
 		if err := bc.db.Sync(); err != nil {

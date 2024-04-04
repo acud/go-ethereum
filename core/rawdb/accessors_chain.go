@@ -846,6 +846,33 @@ func WriteBlockDoc(db ethdb.DocStoreWriter, block *types.Block) {
 	WriteHeaderDoc(db, block.Header())
 }
 
+func WriteAncientBlocksDoc(db ethdb.DocStoreWriter, blocks []*types.Block, receipts []types.Receipts, td *big.Int) (int64, error) {
+	var (
+	//tdSum      = new(big.Int).Set(td)
+	//stReceipts []*types.ReceiptForStorage
+	)
+	//return db.ModifyAncients(func(op ethdb.AncientWriteOp) error {
+	for _, block := range blocks {
+		WriteBlockDoc(db, block)
+		// Convert receipts to storage format and sum up total difficulty.
+		//stReceipts = stReceipts[:0]
+		//for _, receipt := range receipts[i] {
+		//stReceipts = append(stReceipts, (*types.ReceiptForStorage)(receipt))
+		//}
+		//header := block.Header()
+		//if i > 0 {
+		//tdSum.Add(tdSum, header.Difficulty)
+		//}
+		//if err := writeAncientBlock(op, block, header, stReceipts, tdSum); err != nil {
+		//return err
+		//}
+	}
+	//return nil
+	//})
+
+	return int64(len(blocks)), nil
+}
+
 // WriteAncientBlocks writes entire block data into ancient store and returns the total written size.
 func WriteAncientBlocks(db ethdb.AncientWriter, blocks []*types.Block, receipts []types.Receipts, td *big.Int) (int64, error) {
 	var (
