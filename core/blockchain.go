@@ -1390,6 +1390,7 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 			// Write all the data out into the database
 			rawdb.WriteBody(batch, block.Hash(), block.NumberU64(), block.Body())
 			rawdb.WriteBodyDoc(bc.mongo, block.Hash(), block.NumberU64(), block.Body())
+			fmt.Println("wrote body doc. hash: ", block.Hash(), "height: ", block.NumberU64(), "body: ", block.Body())
 			rawdb.WriteReceipts(batch, block.Hash(), block.NumberU64(), receiptChain[i])
 
 			// Write everything belongs to the blocks into the database. So that
