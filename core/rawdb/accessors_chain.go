@@ -402,13 +402,13 @@ func WriteHeaderDoc(db ethdb.DocStoreWriter, header *types.Header) {
 	//hash   = header.Hash()
 	//number = header.Number.Uint64()
 	//)
-	data, err := rlp.EncodeToBytes(header)
-	if err != nil {
-		log.Crit("Failed to RLP encode header", "err", err)
-	}
+	//data, err := rlp.EncodeToBytes(header)
+	//if err != nil {
+	//log.Crit("Failed to RLP encode header", "err", err)
+	//}
 
 	// TODO: Add the index in mongo somehow
-	if _, err := db.Write("header", data); err != nil {
+	if _, err := db.Write("header", header); err != nil {
 		log.Crit("Failed to store header", "err", err)
 	}
 	// Write the hash -> number mapping
