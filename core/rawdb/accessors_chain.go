@@ -848,29 +848,49 @@ func WriteBlockDoc(db ethdb.DocStoreWriter, block *types.Block) {
 
 func WriteAncientBlocksDoc(db ethdb.DocStoreWriter, blocks []*types.Block, receipts []types.Receipts, td *big.Int) (int64, error) {
 	var (
-	//tdSum      = new(big.Int).Set(td)
-	//stReceipts []*types.ReceiptForStorage
+		tdSum      = new(big.Int).Set(td)
+		stReceipts []*types.ReceiptForStorage
 	)
-	//return db.ModifyAncients(func(op ethdb.AncientWriteOp) error {
-	for _, block := range blocks {
-		WriteBlockDoc(db, block)
+	for i, block := range blocks {
+		//WriteBlockDoc(db, block)
 		// Convert receipts to storage format and sum up total difficulty.
-		//stReceipts = stReceipts[:0]
-		//for _, receipt := range receipts[i] {
-		//stReceipts = append(stReceipts, (*types.ReceiptForStorage)(receipt))
-		//}
-		//header := block.Header()
-		//if i > 0 {
-		//tdSum.Add(tdSum, header.Difficulty)
-		//}
-		//if err := writeAncientBlock(op, block, header, stReceipts, tdSum); err != nil {
-		//return err
-		//}
+		stReceipts = stReceipts[:0]
+		for _, receipt := range receipts[i] {
+			stReceipts = append(stReceipts, (*types.ReceiptForStorage)(receipt))
+		}
+		header := block.Header()
+		if i > 0 {
+			tdSum.Add(tdSum, header.Difficulty)
+		}
+		if err := writeAncientBlockDoc(db, block, header, stReceipts, tdSum); err != nil {
+			return 0, err
+		}
 	}
-	//return nil
-	//})
 
 	return int64(len(blocks)), nil
+}
+
+type BlockBodyAncient struct {
+	Number     uint64
+	Difficulty *big.Int
+	Hash       common.Hash
+	Header     *types.Header
+	Receipts   []*types.ReceiptForStorage
+	Body       *types.Body
+}
+
+func writeAncientBlockDoc(db ethdb.DocStoreWriter, block *types.Block, header *types.Header, receipts []*types.ReceiptForStorage, td *big.Int) error {
+	bb := &BlockBodyAncient{
+		Number:     block.NumberU64(),
+		Difficulty: td,
+		Hash:       block.Hash(),
+		Header:     header,
+		Body:       block.Body(),
+		Receipts:   receipts,
+	}
+	_, err := db.Write("ancients", bb)
+
+	return err
 }
 
 // WriteAncientBlocks writes entire block data into ancient store and returns the total written size.
