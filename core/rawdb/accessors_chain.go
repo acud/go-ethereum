@@ -398,27 +398,19 @@ func WriteHeader(db ethdb.KeyValueWriter, header *types.Header) {
 	}
 }
 func WriteHeaderDoc(db ethdb.DocStoreWriter, header *types.Header) {
-	//var (
-	//hash   = header.Hash()
-	//number = header.Number.Uint64()
-	//)
-	//data, err := rlp.EncodeToBytes(header)
-	//if err != nil {
-	//log.Crit("Failed to RLP encode header", "err", err)
-	//}
-
 	// TODO: Add the index in mongo somehow
 	if _, err := db.Write("header", header); err != nil {
 		log.Crit("Failed to store header", "err", err)
 	}
-	// Write the hash -> number mapping
-	//WriteHeaderNumber(db, hash, number)
 
-	//Write the encoded header
-	//key := headerKey(number, hash)
-	//if err := db.Put(key, data); err != nil {
-	//log.Crit("Failed to store header", "err", err)
-	//}
+	nh := NumberHash{
+		Number: header.Number.Uint64(),
+		Hash:   header.Hash(),
+	}
+
+	if _, err := db.Write("header_number", nh); err != nil {
+		log.Crit("Failed to store header", "err", err)
+	}
 }
 
 // DeleteHeader removes all block header data associated with a hash.
@@ -474,16 +466,6 @@ func ReadBodyRLPDoc(db ethdb.DocStoreReader, hash common.Hash, number uint64) rl
 	}
 
 	fmt.Println("doc read body returned data", data)
-	//db.ReadAncients(func(reader ethdb.AncientReaderOp) error {
-	//// Check if the data is in ancients
-	//if isCanon(reader, number, hash) {
-	//data, _ = reader.Ancient(ChainFreezerBodiesTable, number)
-	//return nil
-	//}
-	//// If not, try reading from leveldb
-	//data, _ = db.Get(blockBodyKey(number, hash))
-	//return nil
-	//})
 	return data
 }
 
@@ -567,16 +549,36 @@ func WriteBody(db ethdb.KeyValueWriter, hash common.Hash, number uint64, body *t
 }
 
 type BlockBody struct {
-	types.Body
+	BodyDoc
 	Hash   common.Hash
 	Number uint64
 }
 
+type BodyDoc struct {
+	Transactions [][]byte
+	Uncles       []*types.Header
+	Withdrawals  []*types.Withdrawal
+}
+
 func WriteBodyDoc(db ethdb.DocStoreWriter, hash common.Hash, number uint64, body *types.Body) {
+	var txns [][]byte
+	for _, tx := range body.Transactions {
+		bin, err := tx.MarshalBinary()
+		if err != nil {
+			panic(err)
+		}
+
+		txns = append(txns, bin)
+	}
+	bd := BodyDoc{
+		Transactions: txns,
+		Uncles:       body.Uncles,
+		Withdrawals:  body.Withdrawals,
+	}
 	v := &BlockBody{
-		Body:   *body,
-		Hash:   hash,
-		Number: number,
+		BodyDoc: bd,
+		Hash:    hash,
+		Number:  number,
 	}
 	db.Write("body", v)
 }
