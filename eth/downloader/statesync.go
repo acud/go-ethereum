@@ -110,7 +110,10 @@ func (s *stateSync) run() {
 
 // Wait blocks until the sync is done or canceled.
 func (s *stateSync) Wait() error {
-	<-s.done
+	select {
+	case <-s.done:
+	case <-s.cancel:
+	}
 	return s.err
 }
 
